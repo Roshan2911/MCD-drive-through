@@ -1,0 +1,89 @@
+#include<Servo.h>
+int echo1 = 0;//decalring 0 as echo
+int trig1 = 1; //declaring 1 as trig
+int echo2= 3;//decalring 3 as echo
+int trig2=4;//declaring 4 as trig
+int i=0;
+int menu[4]={13,12,11,10};//declaring the leds as 4 menus
+int sensor[4]={0,0,0,0};//assigning the sensor 0
+Servo barricadeOut;//declaring a out barricade
+Servo barricadeIn;//declaring a in barricade
+
+void setup()
+{
+  pinMode(trig1, OUTPUT);
+  pinMode(trig2, OUTPUT);
+  pinMode(echo1, INPUT);
+  pinMode(echo2, INPUT);
+  pinMode(9, INPUT);
+  pinMode(8, INPUT);
+  pinMode(7, INPUT);
+  pinMode(6, INPUT);
+  for(int i=0;i<4;i++)
+  {
+    pinMode(menu[i], OUTPUT);
+  }
+  Serial.begin(9600);
+  barricadeIn.attach(2);
+  barricadeOut.attach(5);
+}
+void loop()
+{//using if statement to make the barricade open if the distance between car and sensor is 15 cm
+  barricadeIn.write(0);
+  if(calc_disIn()<=15)
+  {
+      barricadeIn.write(90);//barricade opens
+          
+    delay(4000);
+      barricadeIn.write(0);//barricade closes after 4 secs
+  }
+  delay(2000);
+  for(int i=0;i<4;i++)
+  {
+    sensor[i]=digitalRead(9-i);//assigning the digital value of the sensor
+    //if sensor is high, the corresponding menu lights up
+    if(sensor[i]==HIGH)
+    {
+      digitalWrite(menu[i], HIGH);
+    }
+    else
+    {
+      digitalWrite(menu[i], LOW);
+    }
+  } 
+  delay(2000);
+  //using if statement to make the barricade open if the distance between car and sensor is 15 cm
+  barricadeOut.write(0);
+  if(calc_disOut()<=15)
+  {
+      barricadeOut.write(90);//barricade opens for going out
+          
+    delay(4000);
+      barricadeOut.write(0);//barricade closes after 4 secs
+  }
+  delay(2000);
+  }
+  int calc_disIn()
+  {//code for ultrasonic sensor
+    int time, distance;
+    digitalWrite(trig1, LOW);//assigning trigger pin low
+    delayMicroseconds(10);
+    digitalWrite(trig1, HIGH);//assigning trigger pin high
+    delayMicroseconds(10);  
+    digitalWrite(trig1, LOW);//asssigning it low
+    time= pulseIn(echo1, HIGH);//the echo pins takes in the reflected signal and stores the time taken for travel
+    distance= time/58.2;//as the signal travels twice the distance
+    return distance;
+  } 
+  int calc_disOut()
+  {
+    int time, distance;
+    digitalWrite(trig2, LOW);//assigning trigger pin low
+    delayMicroseconds(10);
+    digitalWrite(trig2, HIGH);//assigning trigger pin high
+    delayMicroseconds(10);  
+    digitalWrite(trig2, LOW);//asssigning it low
+    time= pulseIn(echo2, HIGH);//the echo pins takes in the reflected signal and stores the time taken for travel
+    distance= time/58.2;//as the signal travels twice the distance
+    return distance;
+  }
