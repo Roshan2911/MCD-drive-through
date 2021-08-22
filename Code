@@ -1,89 +1,139 @@
 #include<Servo.h>
-int echo1 = 0;//decalring 0 as echo
-int trig1 = 1; //declaring 1 as trig
-int echo2= 3;//decalring 3 as echo
-int trig2=4;//declaring 4 as trig
-int i=0;
-int menu[4]={13,12,11,10};//declaring the leds as 4 menus
-int sensor[4]={0,0,0,0};//assigning the sensor 0
-Servo barricadeOut;//declaring a out barricade
-Servo barricadeIn;//declaring a in barricade
-
+//defining the ultrasonic sensors
+#define trigPin_1 12 
+#define echoPin_1 11
+#define trigPin_2 6
+#define echoPin_2 5
+//for servo motor
+Servo barricadeIn;
+Servo barricadeOut;
+int Sin=13;
+int Sout=4;
+//for PIR sensor and menu
+int pir1=7;//PIR 1
+int pir2=8;//PIR 2
+int pir3=9;//PIR 3
+int pir4=10;//PIR 4
+int sensor1=LOW;
+int sensor2=LOW;
+int sensor3=LOW;
+int sensor4=LOW;
+int menu1= A1;
+int menu2= A2;
+int menu3= A3;
+int menu4= A4;
+//add a checker to make sure the order is followed
+bool checker= false;
+int check=1;
 void setup()
 {
-  pinMode(trig1, OUTPUT);
-  pinMode(trig2, OUTPUT);
-  pinMode(echo1, INPUT);
-  pinMode(echo2, INPUT);
-  pinMode(9, INPUT);
-  pinMode(8, INPUT);
-  pinMode(7, INPUT);
-  pinMode(6, INPUT);
-  for(int i=0;i<4;i++)
-  {
-    pinMode(menu[i], OUTPUT);
-  }
   Serial.begin(9600);
-  barricadeIn.attach(2);
-  barricadeOut.attach(5);
+  pinMode(trigPin_1, OUTPUT);
+  pinMode(trigPin_2, OUTPUT);
+  pinMode(echoPin_1,INPUT);
+  pinMode(echoPin_2, INPUT);
+  pinMode(pir1, INPUT);
+  pinMode(pir2, INPUT);
+  pinMode(pir3, INPUT);
+  pinMode(pir4, INPUT);
+  pinMode(menu1, OUTPUT); 
+  pinMode(menu2, OUTPUT); 
+  pinMode(menu3, OUTPUT); 
+  pinMode(menu4, OUTPUT); 
+  barricadeIn.attach(13);
+  barricadeIn.write(0);
+  barricadeOut.attach(4);
+  barricadeOut.write(0);
 }
 void loop()
-{//using if statement to make the barricade open if the distance between car and sensor is 15 cm
-  barricadeIn.write(0);
-  if(calc_disIn()<=15)
+{
+  if(calc_distIn()<=150)
   {
-      barricadeIn.write(90);//barricade opens
-          
+    barricadeIn.write(90);
     delay(4000);
-      barricadeIn.write(0);//barricade closes after 4 secs
+    barricadeIn.write(0);
+    delay(2000);
+    check=1;
   }
-  delay(2000);
-  for(int i=0;i<4;i++)
+  //to select the menu
+  digitalWrite(menu1, LOW);
+  digitalWrite(menu2, LOW);
+  digitalWrite(menu3, LOW);
+  digitalWrite(menu4, LOW);
+  if(check == 1)
   {
-    sensor[i]=digitalRead(9-i);//assigning the digital value of the sensor
-    //if sensor is high, the corresponding menu lights up
-    if(sensor[i]==HIGH)
+    while(!checker)
     {
-      digitalWrite(menu[i], HIGH);
-    }
-    else
-    {
-      digitalWrite(menu[i], LOW);
-    }
-  } 
-  delay(2000);
-  //using if statement to make the barricade open if the distance between car and sensor is 15 cm
-  barricadeOut.write(0);
-  if(calc_disOut()<=15)
-  {
-      barricadeOut.write(90);//barricade opens for going out
-          
-    delay(4000);
-      barricadeOut.write(0);//barricade closes after 4 secs
+      sensor1=digitalRead(pir1);
+      sensor2=digitalRead(pir2);
+      sensor3=digitalRead(pir3);
+      sensor4=digitalRead(pir4);
+      //To light up red led menu 1 is chosen
+  	  if(sensor1 == HIGH)
+      {
+    	digitalWrite(menu1, HIGH);
+        checker = true;
+      }
+      //To light up bue led menu 2 is chosen
+  	  else if(sensor2 == HIGH)
+      {
+  	     digitalWrite(menu2, HIGH);
+         checker = true;
+        }
+      //To light up green led menu 3 is chosen
+  	  else if(sensor3 == HIGH)
+      {
+    	digitalWrite(menu3, HIGH);
+      	checker = true;
+      }
+      //To light up yellow led menu 4 is chosen
+  	  else if(sensor4 == HIGH)
+      {
+  		digitalWrite(menu4, HIGH);
+        checker = true;
+      }
+        }    
+     while(checker)
+        {
+          if(calc_distOut()<=150)
+          {
+            barricadeOut.write(90);
+            delay(4000);
+            barricadeOut.write(0);
+            delay(2000);
+            check=0;
+            checker= false;
+          }
+     }
   }
-  delay(2000);
-  }
-  int calc_disIn()
-  {//code for ultrasonic sensor
-    int time, distance;
-    digitalWrite(trig1, LOW);//assigning trigger pin low
-    delayMicroseconds(10);
-    digitalWrite(trig1, HIGH);//assigning trigger pin high
-    delayMicroseconds(10);  
-    digitalWrite(trig1, LOW);//asssigning it low
-    time= pulseIn(echo1, HIGH);//the echo pins takes in the reflected signal and stores the time taken for travel
-    distance= time/58.2;//as the signal travels twice the distance
-    return distance;
-  } 
-  int calc_disOut()
-  {
-    int time, distance;
-    digitalWrite(trig2, LOW);//assigning trigger pin low
-    delayMicroseconds(10);
-    digitalWrite(trig2, HIGH);//assigning trigger pin high
-    delayMicroseconds(10);  
-    digitalWrite(trig2, LOW);//asssigning it low
-    time= pulseIn(echo2, HIGH);//the echo pins takes in the reflected signal and stores the time taken for travel
-    distance= time/58.2;//as the signal travels twice the distance
-    return distance;
-  }
+    delay(1000);
+    //reseting all the sensor pins to low
+       sensor1 = LOW;
+        sensor2 = LOW;
+        sensor3 = LOW;
+        sensor4 = LOW;
+}
+int calc_distIn()
+        {
+  int time, distance;
+  digitalWrite(trigPin_1, LOW);
+  delayMicroseconds(10);
+  digitalWrite(trigPin_1, HIGH);
+  delayMicroseconds(10);  
+  digitalWrite(trigPin_1, LOW);
+  time= pulseIn(echoPin_1, HIGH);
+  distance= time/0.068;
+  return distance;
+} 
+int calc_distOut()
+{
+  int time, distance;
+  digitalWrite(trigPin_2, LOW);
+  delayMicroseconds(10);
+  digitalWrite(trigPin_2, HIGH);
+  delayMicroseconds(10);  
+  digitalWrite(trigPin_2, LOW);
+  time= pulseIn(echoPin_2, HIGH);
+  distance= time/0.068;
+  return distance;
+ }         
